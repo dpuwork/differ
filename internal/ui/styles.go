@@ -8,9 +8,11 @@ import (
 // Styles holds all lipgloss styles derived from a theme.
 type Styles struct {
 	// File list
-	FileItem     lipgloss.Style
-	FileSelected lipgloss.Style
-	StagedIcon   lipgloss.Style
+	FileItem       lipgloss.Style
+	FileSelected   lipgloss.Style
+	StagedIcon     lipgloss.Style
+	FileStatsAdded   lipgloss.Style
+	FileStatsDeleted lipgloss.Style
 
 	// File status colors
 	StatusModified  lipgloss.Style
@@ -55,6 +57,10 @@ func NewStyles(t theme.Theme) Styles {
 		StagedIcon: lipgloss.NewStyle().
 			Foreground(lipgloss.Color(t.StagedFg)).
 			Bold(true),
+		FileStatsAdded: lipgloss.NewStyle().
+			Foreground(lipgloss.Color(t.AddedFg)),
+		FileStatsDeleted: lipgloss.NewStyle().
+			Foreground(lipgloss.Color(t.RemovedFg)),
 
 		StatusModified: lipgloss.NewStyle().
 			Foreground(lipgloss.Color(t.ModifiedFg)),

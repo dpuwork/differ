@@ -179,21 +179,53 @@ func (m Model) renderFileList(height int) string {
 
 func (m Model) renderFileItem(f fileItem, selected bool) string {
 	status := string(f.change.Status)
-	stats := fmt.Sprintf("+%d -%d", f.change.AddedLines, f.change.DeletedLines)
+	addedStr := fmt.Sprintf("+%d", f.change.AddedLines)
+	deletedStr := fmt.Sprintf("-%d", f.change.DeletedLines)
+	statsWidth := len(addedStr) + 1 + len(deletedStr)
+
 	name := filepath.Base(f.change.Path)
 	if f.change.OldPath != "" {
 		name = filepath.Base(f.change.OldPath) + " → " + filepath.Base(f.change.Path)
 	}
-	nameMaxW := fileListWidth - 1 - lipgloss.Width(status) - 1 - lipgloss.Width(stats) - 1
+
+	statusWidth := lipgloss.Width(status)
+	nameMaxW := fileListWidth - 1 - statusWidth - 1 - statsWidth - 2
 	if nameMaxW < 1 {
 		nameMaxW = 1
 	}
 	name = truncatePath(name, nameMaxW)
-	if selected {
-		return m.styles.FileSelected.Width(fileListWidth).MaxHeight(1).Render(fmt.Sprintf(" %s %s %s", status, name, stats))
+	nameWidth := lipgloss.Width(name)
+
+	gap := fileListWidth - 1 - statusWidth - 1 - nameWidth - statsWidth - 1
+	if gap < 1 {
+		gap = 1
 	}
-	line := fmt.Sprintf(" %s %s %s", m.styleStatus(status, f.change.Status), name, stats)
-	return m.styles.FileItem.Width(fileListWidth).MaxHeight(1).Render(line)
+
+	var statusStyled, nameStyled, gapStr, addedStyled, deletedStyled, leftSpace, midSpace, rightSpace string
+
+	if selected {
+		statusStyled = m.styles.FileSelected.Render(status)
+		nameStyled = m.styles.FileSelected.Render(name)
+		gapStr = m.styles.FileSelected.Render(strings.Repeat(" ", gap))
+		addedStyled = m.styles.FileStatsAdded.Bold(true).Render(addedStr)
+		deletedStyled = m.styles.FileStatsDeleted.Bold(true).Render(deletedStr)
+		leftSpace = m.styles.FileSelected.Render(" ")
+		midSpace = m.styles.FileSelected.Render(" ")
+		rightSpace = m.styles.FileSelected.Render(" ")
+	} else {
+		statusStyled = m.styleStatus(status, f.change.Status)
+		nameStyled = m.styles.FileItem.Render(name)
+		gapStr = strings.Repeat(" ", gap)
+		addedStyled = m.styles.FileStatsAdded.Render(addedStr)
+		deletedStyled = m.styles.FileStatsDeleted.Render(deletedStr)
+		leftSpace = " "
+		midSpace = " "
+		rightSpace = " "
+	}
+
+	statsStyled := addedStyled + " " + deletedStyled
+
+	return leftSpace + statusStyled + midSpace + nameStyled + gapStr + statsStyled + rightSpace
 }
 
 func (m Model) renderBranchList(height int) string {
