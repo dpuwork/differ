@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -8,6 +10,37 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/dpuwork/differ/internal/config"
 )
+
+const maxDisplayFileSize = 50 * 1024 * 1024 // 50 MB
+
+func isLargeOrBinary(repoDir, filename string) (bool, string) {
+	fullPath := filepath.Join(repoDir, filename)
+	info, err := os.Stat(fullPath)
+	if err != nil {
+		return false, ""
+	}
+
+	if info.Size() > maxDisplayFileSize {
+		return true, "file too large to display"
+	}
+
+	// Read first 512 bytes to check for binary
+	f, err := os.Open(fullPath)
+	if err != nil {
+		return false, ""
+	}
+	defer f.Close()
+
+	buf := make([]byte, 512)
+	n, _ := f.Read(buf)
+	if n > 0 {
+		if strings.Contains(string(buf[:n]), "\x00") {
+			return true, "binary file not displayed"
+		}
+	}
+
+	return false, ""
+}
 
 // Commit, staging, polling, sync, and async command workflows.
 
@@ -199,6 +232,14 @@ func (m Model) loadDiffCmd(resetScroll bool) tea.Cmd {
 	splitMode := m.splitDiff && diffW >= minSplitWidth
 	return func() tea.Msg {
 		var content string
+		
+		isSkip, skipMsg := isLargeOrBinary(repo.Dir(), filename)
+		if isSkip {
+			// Center the message or just show it
+			content = styles.DiffHunkHeader.Render(skipMsg)
+			return diffLoadedMsg{content: content, index: idx, resetScroll: resetScroll}
+		}
+
 		if f.untracked {
 			raw, err := repo.ReadFileContent(filename)
 			if err != nil {

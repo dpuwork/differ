@@ -47,6 +47,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, clearCmd
 		}
 		return m, nil
+	case tea.MouseMsg:
+		if !m.ready {
+			return m, nil
+		}
+		mouseEvent := msg.Mouse()
+		if _, isClick := msg.(tea.MouseClickMsg); isClick && mouseEvent.Button == tea.MouseLeft {
+			return m.handleMouseLeftClick(mouseEvent)
+		}
+		return m, nil
 	case tea.KeyPressMsg:
 		if !m.ready {
 			return m, nil
@@ -65,6 +74,91 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	return m, nil
+}
+
+func (m Model) handleMouseLeftClick(msg tea.Mouse) (tea.Model, tea.Cmd) {
+	// If it's a help popup or we are typing, ignore
+	if m.mode == modeHelp || m.mode == modeCommit || m.mode == modeBranchPicker {
+		return m, nil
+	}
+
+	isLeftPane := msg.X <= fileListWidth+1
+	isRightPane := msg.X > fileListWidth+2
+
+	var cmd tea.Cmd
+
+	if isLeftPane {
+		if m.mode != modeFileList {
+			m.mode = modeFileList
+		}
+		
+		// Determine which file was clicked
+		// The list starts at Y=1 (due to top border)
+		// We need to account for the "STAGED" and "CHANGES" headers
+		clickY := msg.Y - 1 // 0-indexed relative to content area
+		if clickY >= 0 && clickY < m.contentHeight() {
+			stagedCount := 0
+			for _, f := range m.files {
+				if f.change.Staged {
+					stagedCount++
+				}
+			}
+
+			renderedLines := 0
+			clickedIndex := -1
+
+			if stagedCount > 0 {
+				// STAGED header
+				if clickY == renderedLines {
+					return m, nil // Clicked header
+				}
+				renderedLines++
+
+				for i := 0; i < stagedCount; i++ {
+					if clickY == renderedLines {
+						clickedIndex = i
+						break
+					}
+					renderedLines++
+				}
+			}
+
+			if clickedIndex == -1 && len(m.files) > stagedCount {
+				if stagedCount > 0 {
+					if clickY == renderedLines {
+						return m, nil // Clicked empty margin
+					}
+					renderedLines++ // Account for MarginTop(1) on CHANGES header
+				}
+				// CHANGES header
+				if clickY == renderedLines {
+					return m, nil // Clicked header
+				}
+				renderedLines++
+
+				for i := stagedCount; i < len(m.files); i++ {
+					if clickY == renderedLines {
+						clickedIndex = i
+						break
+					}
+					renderedLines++
+				}
+			}
+
+			if clickedIndex != -1 {
+				m.cursor = clickedIndex
+				m.prevCurs = clickedIndex
+				cmd = m.loadDiffCmd(true)
+			}
+		}
+
+	} else if isRightPane {
+		if m.mode != modeDiff {
+			m.mode = modeDiff
+		}
+	}
+
+	return m, cmd
 }
 
 func (m Model) handleResize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
