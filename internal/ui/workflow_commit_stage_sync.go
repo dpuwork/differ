@@ -9,6 +9,7 @@ import (
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
 	"github.com/dpuwork/differ/internal/config"
+	"github.com/dpuwork/differ/internal/theme"
 )
 
 const maxDisplayFileSize = 50 * 1024 * 1024 // 50 MB
@@ -161,8 +162,28 @@ func tickCmd() tea.Cmd {
 	return tea.Tick(pollInterval, func(t time.Time) tea.Msg { return tickMsg(t) })
 }
 
+func tickThemeCmd() tea.Cmd {
+	return tea.Tick(themeInterval, func(t time.Time) tea.Msg { return tickThemeMsg(t) })
+}
+
+func (m Model) handleTickTheme() (tea.Model, tea.Cmd) {
+	// Request the background color from the terminal.
+	// We'll receive a tea.BackgroundColorMsg if it succeeds.
+	return m, tea.Batch(tea.RequestBackgroundColor, tickThemeCmd())
+}
+
+func (m Model) handleBackgroundColor(msg tea.BackgroundColorMsg) (tea.Model, tea.Cmd) {
+	isDark := msg.IsDark()
+	if m.theme.IsDark != isDark {
+		m.theme = theme.GetTheme(isDark)
+		m.refreshTheme()
+		// Redraw diff with new theme colors
+		return m, m.loadDiffCmd(false)
+	}
+	return m, nil
+}
+
 func (m Model) handleTick() (tea.Model, tea.Cmd) {
-	m.refreshTheme()
 	if m.mode == modeCommit || m.mode == modeBranchPicker {
 		return m, tickCmd()
 	}

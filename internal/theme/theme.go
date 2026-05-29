@@ -2,25 +2,13 @@ package theme
 
 import (
 	"os"
-	"strings"
 
 	"charm.land/lipgloss/v2"
 )
 
-// IsDarkBackground detects if the background is dark based on configuration,
-// or terminal query.
-func IsDarkBackground(cfgTheme string) bool {
-	// 1. Check config override
-	if cfgTheme != "" {
-		if strings.ToLower(cfgTheme) == "light" {
-			return false
-		}
-		if strings.ToLower(cfgTheme) == "dark" {
-			return true
-		}
-	}
-
-	// 2. Fall back to automatic detection before raw mode starts
+// IsDarkBackground detects if the background is dark based on terminal query.
+func IsDarkBackground() bool {
+	// Fall back to automatic detection before raw mode starts
 	return lipgloss.HasDarkBackground(os.Stdin, os.Stdout)
 }
 
@@ -108,10 +96,10 @@ func DefaultTheme() Theme {
 	}
 }
 
-// GetTheme returns the theme, with values adjusted for given configuration or detected background.
-func GetTheme(cfgTheme string) Theme {
+// GetTheme returns the theme, with values adjusted for detected background.
+func GetTheme(isDark bool) Theme {
 	t := DefaultTheme()
-	t.IsDark = IsDarkBackground(cfgTheme)
+	t.IsDark = isDark
 	if t.IsDark {
 		t.AddedBg = "#233b2a"
 		t.RemovedBg = "#3b232e"

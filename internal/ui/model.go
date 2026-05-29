@@ -28,6 +28,7 @@ const (
 
 const fileListWidth = 35
 const pollInterval = 2 * time.Second
+const themeInterval = 5 * time.Second
 const statusTimeout = 7 * time.Second
 
 const (
@@ -36,6 +37,7 @@ const (
 )
 
 type tickMsg time.Time
+type tickThemeMsg time.Time
 
 type diffLoadedMsg struct {
 	content     string
@@ -211,7 +213,7 @@ func (m *Model) StartInCommitMode() {
 }
 
 func (m Model) Init() tea.Cmd {
-	cmds := []tea.Cmd{m.loadDiffCmd(true), m.fetchUpstreamStatusCmd(), tickFetchCmd(), tickCmd()}
+	cmds := []tea.Cmd{m.loadDiffCmd(true), m.fetchUpstreamStatusCmd(), tickFetchCmd(), tickCmd(), tickThemeCmd()}
 	if m.mode == modeCommit {
 		cmds = append(cmds, textinput.Blink)
 	}

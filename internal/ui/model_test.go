@@ -222,7 +222,7 @@ func TestRenderCard_EmptyTitle(t *testing.T) {
 
 func newTestModel(t *testing.T, files []fileItem) Model {
 	t.Helper()
-	th := theme.GetTheme("")
+	th := theme.GetTheme(false)
 	bf := textinput.New()
 	bf.Placeholder = "filter..."
 	bf.CharLimit = 100

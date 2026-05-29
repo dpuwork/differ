@@ -83,7 +83,8 @@ func runDiff(cmd *cobra.Command, args []string) error {
 	}
 
 	cfg := config.Load()
-	t := theme.GetTheme(cfg.Theme)
+	isDark := theme.IsDarkBackground()
+	t := theme.GetTheme(isDark)
 	styles := ui.NewStyles(t)
 
 	model := ui.NewModel(repo, cfg, files, untracked, styles, t, flagStaged, flagRef, version)
@@ -137,7 +138,8 @@ func runCommit(cmd *cobra.Command, args []string) error {
 	}
 
 	cfg := config.Load()
-	t := theme.GetTheme(cfg.Theme)
+	isDark := theme.IsDarkBackground()
+	t := theme.GetTheme(isDark)
 	styles := ui.NewStyles(t)
 
 	model := ui.NewModel(repo, cfg, files, nil, styles, t, true, "", version)
@@ -158,10 +160,11 @@ func runLog(cmd *cobra.Command, args []string) error {
 	}
 
 	cfg := config.Load()
-	t := theme.GetTheme(cfg.Theme)
+	isDark := theme.IsDarkBackground()
+	t := theme.GetTheme(isDark)
 	styles := ui.NewStyles(t)
 
-	model := ui.NewLogModel(repo, styles, t)
+	model := ui.NewLogModel(repo, cfg, styles, t)
 	p := tea.NewProgram(model)
 	_, err = p.Run()
 	return err

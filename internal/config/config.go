@@ -11,7 +11,6 @@ type Config struct {
 	SplitDiff bool   `json:"split_diff"`
 	WrapDiff  bool   `json:"wrap_diff"`
 	EditorCmd string `json:"editor_cmd"`
-	Theme     string `json:"theme"`
 }
 
 // Default returns the default configuration.

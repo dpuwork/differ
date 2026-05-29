@@ -16,6 +16,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case tea.WindowSizeMsg:
 		return m.handleResize(msg)
+	case tea.BackgroundColorMsg:
+		return m.handleBackgroundColor(msg)
+	case tickThemeMsg:
+		return m.handleTickTheme()
 	case tickMsg:
 		return m.handleTick()
 	case diffLoadedMsg:

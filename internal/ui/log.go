@@ -7,6 +7,7 @@ import (
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/dpuwork/differ/internal/config"
 	"github.com/dpuwork/differ/internal/git"
 	"github.com/dpuwork/differ/internal/theme"
 )
@@ -30,6 +31,7 @@ type logDiffLoadedMsg struct {
 // LogModel is the Bubble Tea model for the commit log browser.
 type LogModel struct {
 	repo     *git.Repo
+	cfg      config.Config
 	styles   Styles
 	theme    theme.Theme
 	commits  []git.Commit
@@ -42,16 +44,19 @@ type LogModel struct {
 }
 
 // NewLogModel creates the log browser model.
-func NewLogModel(repo *git.Repo, styles Styles, t theme.Theme) LogModel {
-	return LogModel{repo: repo, styles: styles, theme: t}
+func NewLogModel(repo *git.Repo, cfg config.Config, styles Styles, t theme.Theme) LogModel {
+	return LogModel{repo: repo, cfg: cfg, styles: styles, theme: t}
 }
 
 func (m LogModel) Init() tea.Cmd {
 	repo := m.repo
-	return func() tea.Msg {
-		commits, _ := repo.Log(100)
-		return logLoadedMsg{commits: commits}
-	}
+	return tea.Batch(
+		func() tea.Msg {
+			commits, _ := repo.Log(100)
+			return logLoadedMsg{commits: commits}
+		},
+		tickThemeCmd(),
+	)
 }
 
 func (m *LogModel) refreshTheme() {
@@ -60,6 +65,19 @@ func (m *LogModel) refreshTheme() {
 
 func (m LogModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.BackgroundColorMsg:
+		isDark := msg.IsDark()
+		if m.theme.IsDark != isDark {
+			m.theme = theme.GetTheme(isDark)
+			m.refreshTheme()
+			if m.mode == logModeDiff && len(m.commits) > 0 {
+				return m, m.loadCommitDiff()
+			}
+			return m, nil
+		}
+		return m, nil
+	case tickThemeMsg:
+		return m, tea.Batch(tea.RequestBackgroundColor, tickThemeCmd())
 	case tea.WindowSizeMsg:
 		m.refreshTheme()
 		m.width = msg.Width

@@ -120,7 +120,7 @@ func TestPairLines_Empty(t *testing.T) {
 }
 
 func testStyles() (Styles, theme.Theme) {
-	th := theme.GetTheme("")
+	th := theme.GetTheme(false)
 	return NewStyles(th), th
 }
 
