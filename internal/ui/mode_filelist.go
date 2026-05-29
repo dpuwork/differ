@@ -79,7 +79,11 @@ func (m Model) updateFileListMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case "e":
 		if m.cursor < len(m.files) {
-			m.SelectedFile = m.files[m.cursor].change.Path
+			file := m.files[m.cursor].change.Path
+			if isTmux() {
+				return m, m.openEditorTmuxCmd(file)
+			}
+			m.SelectedFile = file
 		}
 		return m, tea.Quit
 	case "tab":

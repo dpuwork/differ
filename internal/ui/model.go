@@ -1,6 +1,10 @@
 package ui
 
 import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -10,7 +14,6 @@ import (
 	"github.com/dpuwork/differ/internal/config"
 	"github.com/dpuwork/differ/internal/git"
 	"github.com/dpuwork/differ/internal/theme"
-	"sort"
 )
 
 type viewMode int
@@ -56,6 +59,8 @@ type pushDoneMsg struct{ err error }
 type pullDoneMsg struct{ err error }
 type savePrefDoneMsg struct{ err error }
 type clearStatusMsg struct{ id int }
+
+type editorFinishedMsg struct{ err error }
 
 type branchCreatedMsg struct {
 	name string
@@ -232,4 +237,36 @@ func (m Model) setStatus(msg string, autoClear bool) (Model, tea.Cmd) {
 		})
 	}
 	return m, nil
+}
+
+func isTmux() bool {
+	return os.Getenv("TMUX") != ""
+}
+
+func (m Model) openEditorTmuxCmd(file string) tea.Cmd {
+	return func() tea.Msg {
+		repoRoot := m.repo.Dir()
+		absPath := filepath.Join(repoRoot, file)
+		editorCmd := m.cfg.EditorCmd
+		if editorCmd == "" {
+			editor := os.Getenv("EDITOR")
+			if editor == "" {
+				editor = "vi"
+			}
+			editorCmd = editor + " {file}"
+		}
+		expanded := strings.ReplaceAll(editorCmd, "{file}", absPath)
+		expanded = strings.ReplaceAll(expanded, "{repo}", repoRoot)
+
+		// Same parsing logic as root.go
+		parts := strings.Fields(expanded)
+
+		// Run in tmux popup
+		args := []string{"popup", "-w", "85%", "-h", "85%", "-E"}
+		args = append(args, parts...)
+		cmd := exec.Command("tmux", args...)
+		cmd.Dir = repoRoot
+		err := cmd.Run()
+		return editorFinishedMsg{err: err}
+	}
 }

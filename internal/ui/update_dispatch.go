@@ -47,6 +47,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, clearCmd
 		}
 		return m, nil
+	case editorFinishedMsg:
+		if msg.err != nil {
+			var clearCmd tea.Cmd
+			m, clearCmd = m.setStatus("editor failed: "+msg.err.Error(), true)
+			return m, clearCmd
+		}
+		var clearCmd tea.Cmd
+		m, clearCmd = m.setStatus("editor closed", false)
+		return m, tea.Batch(clearCmd, m.refreshFilesCmd())
 	case tea.MouseMsg:
 		if !m.ready {
 			return m, nil
