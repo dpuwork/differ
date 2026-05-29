@@ -29,7 +29,7 @@ func isLargeOrBinary(repoDir, filename string) (bool, string) {
 	if err != nil {
 		return false, ""
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	buf := make([]byte, 512)
 	n, _ := f.Read(buf)
