@@ -518,7 +518,12 @@ func renderSplitSideLines(dl *DiffLine, filename string, styles Styles, t theme.
 		if pad := codeWidth - contentWidth; pad > 0 {
 			padding = bgStyle.Render(strings.Repeat(" ", pad))
 		}
-		return []string{nums + " " + prefix + highlighted + padding}
+		// Ensure line is exactly panelW
+		line := nums + " " + prefix + highlighted + padding
+		if lipgloss.Width(line) < panelW {
+			line += bgStyle.Render(strings.Repeat(" ", panelW-lipgloss.Width(line)))
+		}
+		return []string{line}
 	}
 
 	wrapped := lipgloss.NewStyle().Width(textWidth).Render(highlighted)
@@ -537,7 +542,13 @@ func renderSplitSideLines(dl *DiffLine, filename string, styles Styles, t theme.
 		if pad := codeWidth - contentWidth; pad > 0 {
 			padding = bgStyle.Render(strings.Repeat(" ", pad))
 		}
-		result = append(result, curNums+" "+curPrefix+line+padding)
+		
+		// Ensure line is exactly panelW
+		fullLine := curNums + " " + curPrefix + line + padding
+		if lipgloss.Width(fullLine) < panelW {
+			fullLine += bgStyle.Render(strings.Repeat(" ", panelW-lipgloss.Width(fullLine)))
+		}
+		result = append(result, fullLine)
 	}
 	return result
 }

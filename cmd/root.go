@@ -164,7 +164,7 @@ func runLog(cmd *cobra.Command, args []string) error {
 	t := theme.GetTheme(isDark)
 	styles := ui.NewStyles(t)
 
-	model := ui.NewLogModel(repo, cfg, styles, t)
+	model := ui.NewLogModel(repo, cfg, styles, t, version)
 	p := tea.NewProgram(model)
 	_, err = p.Run()
 	return err

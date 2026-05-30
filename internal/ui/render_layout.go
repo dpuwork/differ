@@ -193,7 +193,7 @@ func (m Model) renderFileItem(f fileItem, selected bool) string {
 	if nameMaxW < 1 {
 		nameMaxW = 1
 	}
-	name = truncatePath(name, nameMaxW)
+	name = TruncatePath(name, nameMaxW)
 	nameWidth := lipgloss.Width(name)
 
 	gap := fileListWidth - 1 - statusWidth - 1 - nameWidth - statsWidth - 1
@@ -267,14 +267,14 @@ func (m Model) renderBranchItem(name string, selected, current bool) string {
 	if current {
 		prefix = m.styles.StagedIcon.Render("*")
 	}
-	line := prefix + truncatePath(name, fileListWidth-2)
+	line := prefix + TruncatePath(name, fileListWidth-2)
 	if selected {
 		return m.styles.FileSelected.Width(fileListWidth).MaxHeight(1).Render(line)
 	}
 	return m.styles.FileItem.Width(fileListWidth).MaxHeight(1).Render(line)
 }
 
-func truncatePath(path string, maxW int) string {
+func TruncatePath(path string, maxW int) string {
 	if lipgloss.Width(path) <= maxW {
 		return path
 	}

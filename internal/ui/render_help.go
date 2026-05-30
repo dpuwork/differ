@@ -5,9 +5,14 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
+	"github.com/dpuwork/differ/internal/theme"
 )
 
 func (m Model) renderHelpPopup() string {
+	return RenderHelpPopup(m.styles, m.theme, m.width, m.height, m.version)
+}
+
+func RenderHelpPopup(styles Styles, t theme.Theme, width, height int, version string) string {
 	type helpEntry struct {
 		key  string
 		desc string
@@ -73,7 +78,7 @@ func (m Model) renderHelpPopup() string {
 
 	renderSection := func(s helpSection) string {
 		var b strings.Builder
-		b.WriteString("  " + m.styles.HelpKey.Underline(true).Render(s.title))
+		b.WriteString("  " + styles.HelpKey.Underline(true).Render(s.title))
 		b.WriteByte('\n')
 		for _, e := range s.entries {
 			keyStr := e.key
@@ -82,7 +87,7 @@ func (m Model) renderHelpPopup() string {
 			if keyWidth < 12 {
 				padding = strings.Repeat(" ", 12-keyWidth)
 			}
-			key := m.styles.HelpKey.Render(keyStr) + padding
+			key := styles.HelpKey.Render(keyStr) + padding
 			desc := e.desc
 			fmt.Fprintf(&b, "    %s %s\n", key, desc)
 		}
@@ -111,17 +116,17 @@ func (m Model) renderHelpPopup() string {
 
 	pw := 86
 	ph := 20
-	if pw > m.width-2 {
-		pw = m.width - 2
+	if pw > width-2 {
+		pw = width - 2
 	}
-	if ph > m.height-2 {
-		ph = m.height - 2
-	}
-
-	title := "Help"
-	if m.version != "" {
-		title = fmt.Sprintf("Help (%s)", m.version)
+	if ph > height-2 {
+		ph = height - 2
 	}
 
-	return m.renderCard(title, content, true, pw, ph)
+	title := "differ"
+	if version != "" {
+		title = fmt.Sprintf("differ (%s)", version)
+	}
+
+	return renderCard(t, title, content, true, pw, ph)
 }
