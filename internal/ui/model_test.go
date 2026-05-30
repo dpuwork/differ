@@ -81,9 +81,9 @@ func TestTruncatePath(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := truncatePath(tt.path, tt.maxW)
+			got := TruncatePath(tt.path, tt.maxW)
 			if tt.want != "" && got != tt.want {
-				t.Errorf("truncatePath(%q, %d) = %q, want %q", tt.path, tt.maxW, got, tt.want)
+				t.Errorf("TruncatePath(%q, %d) = %q, want %q", tt.path, tt.maxW, got, tt.want)
 			}
 			if tt.want == "" {
 				// For truncated paths, just verify it starts with ellipsis
